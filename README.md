@@ -32,18 +32,15 @@ soundDb/                       # WAV audio samples for each phoneme
 ## Requirements
 
 - Java 8 or higher (JDK)
-- Apache Ant (for building via `build.xml`)
-- NetBeans IDE (optional — project includes NetBeans project files)
+- Gradle 6.7 or higher
 
 ## Building & Running
 
-**With NetBeans:** Open the project folder and click Run.
-
-**With Ant from the command line:**
+**Using Gradle:**
 ```bash
-ant clean
-ant jar
-java -jar dist/TTS.jar
+./gradlew clean
+./gradlew build
+./gradlew run
 ```
 
 ## Audio Quality Profiles

@@ -3,13 +3,6 @@ build/
 dist/
 .gradle/
 
-# NetBeans private settings (user-specific)
-nbproject/private/
-
-# Cached thumbnails
-nbproject/Makefile-*.mk
-nbproject/Package-*.bash
-
 # Compiled class files
 *.class
 
