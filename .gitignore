@@ -1,0 +1,40 @@
+# Build output
+build/
+dist/
+
+# NetBeans private settings (user-specific)
+nbproject/private/
+
+# Cached thumbnails
+nbproject/Makefile-*.mk
+nbproject/Package-*.bash
+
+# Compiled class files
+*.class
+
+# JAR files
+*.jar
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs
+hs_err_pid*
+
+# Windows thumbnail cache
+Thumbs.db
+ehthumbs.db
+Desktop.ini
