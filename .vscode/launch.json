@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Debug Nepali TTS (tts.Main)",
+      "request": "launch",
+      "mainClass": "tts.Main",
+      "preLaunchTask": "Gradle: build",
+      "console": "integratedTerminal"
+    }
+  ]
+}

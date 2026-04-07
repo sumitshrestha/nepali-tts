@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Gradle: clean",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": ["clean"],
+      "windows": {
+        "command": ".\\gradlew.bat"
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Gradle: build",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": ["build"],
+      "windows": {
+        "command": ".\\gradlew.bat"
+      },
+      "group": "build",
+      "problemMatcher": ["$javac"]
+    },
+    {
+      "label": "Gradle: run",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": ["run"],
+      "windows": {
+        "command": ".\\gradlew.bat"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$javac"]
+    }
+  ]
+}
