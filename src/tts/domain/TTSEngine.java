@@ -12,6 +12,7 @@ public class TTSEngine {
     private static final int BYTES_PER_SAMPLE = 2; // 16-bit PCM mono
     private static final String PROFILE_PROPERTY = "tts.audio.profile";
     private volatile AudioProfile profile;
+    private volatile boolean mergeBeforePlay = false;
 
     public TTSEngine() {
         this(AudioProfile.from(System.getProperty(PROFILE_PROPERTY)));
@@ -29,6 +30,14 @@ public class TTSEngine {
         if (profile != null) {
             this.profile = profile;
         }
+    }
+
+    public boolean isMergeBeforePlayEnabled() {
+        return mergeBeforePlay;
+    }
+
+    public void setMergeBeforePlay(boolean enabled) {
+        this.mergeBeforePlay = enabled;
     }
 
     public int sentencePauseMs() {
@@ -268,6 +277,111 @@ public class TTSEngine {
         pcm[index + 1] = (byte) ((value >>> 8) & 0xff);
     }
 
+    /**
+     * Merges a phoneme sequence into one contiguous PCM byte array with all fades and crossfades pre-applied.
+     * Returns the complete merged audio buffer ready for playback.
+     */
+    public MergedAudio mergeSequence(String[] files,
+                                     BooleanSupplier isCancelled,
+                                     BooleanSupplier isPaused) throws Exception {
+        if (files == null || files.length == 0) {
+            return new MergedAudio(new byte[0], null);
+        }
+
+        AudioFormat format = resolvePlaybackFormat(files[0]);
+        var output = new ByteArrayOutputStream();
+        byte[] pending = null;
+
+        for (String file : files) {
+            if (isCancelled.getAsBoolean()) {
+                return new MergedAudio(new byte[0], format);
+            }
+
+            while (isPaused.getAsBoolean()) {
+                if (isCancelled.getAsBoolean()) {
+                    return new MergedAudio(new byte[0], format);
+                }
+                Thread.sleep(10);
+            }
+
+            var currentProfile = this.profile;
+            var current = decodeToPcm(file, format);
+            applyEdgeFade(current, format, currentProfile.edgeFadeMs());
+
+            if (pending == null) {
+                pending = current;
+                continue;
+            }
+
+            int overlapBytes = overlapBytes(format, pending.length, current.length, currentProfile.crossfadeMs());
+            int writeHeadBytes = pending.length - overlapBytes;
+            if (writeHeadBytes > 0) {
+                output.write(pending, 0, writeHeadBytes);
+            }
+
+            if (overlapBytes > 0) {
+                var blend = buildCrossfade(pending, current, overlapBytes);
+                output.write(blend, 0, blend.length);
+            }
+
+            int currentRemainder = current.length - overlapBytes;
+            if (currentRemainder <= 0) {
+                pending = null;
+            } else {
+                pending = new byte[currentRemainder];
+                System.arraycopy(current, overlapBytes, pending, 0, currentRemainder);
+            }
+        }
+
+        if (pending != null && pending.length > 0) {
+            output.write(pending);
+        }
+
+        return new MergedAudio(output.toByteArray(), format);
+    }
+
+    /**
+     * Plays pre-merged PCM byte array through a single audio line.
+     */
+    public void playMerged(MergedAudio mergedAudio,
+                           BooleanSupplier isCancelled,
+                           BooleanSupplier isPaused) throws Exception {
+        if (mergedAudio == null || mergedAudio.data().length == 0) {
+            return;
+        }
+
+        AudioFormat format = mergedAudio.format();
+        if (format == null) {
+            format = new AudioFormat(
+                    AudioFormat.Encoding.PCM_SIGNED,
+                    DEFAULT_SAMPLE_RATE,
+                    16,
+                    1,
+                    BYTES_PER_SAMPLE,
+                    DEFAULT_SAMPLE_RATE,
+                    false);
+        }
+
+        SourceDataLine line = null;
+        try {
+            var info = new DataLine.Info(SourceDataLine.class, format);
+            line = (SourceDataLine) AudioSystem.getLine(info);
+            line.open(format);
+            line.start();
+
+            writeWithControl(line, mergedAudio.data(), 0, mergedAudio.data().length, isCancelled, isPaused);
+            
+            if (line != null) {
+                line.drain();
+            }
+        } finally {
+            if (line != null) {
+                line.stop();
+                line.close();
+            }
+        }
+    }
+
     public enum AudioProfile {
         CRISP(2, 4, 350),
         BALANCED(4, 8, 500),
@@ -307,4 +421,6 @@ public class TTSEngine {
             };
         }
     }
+
+    public record MergedAudio(byte[] data, AudioFormat format) {}
 }

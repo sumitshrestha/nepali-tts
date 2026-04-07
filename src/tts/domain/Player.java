@@ -19,11 +19,27 @@ public class Player extends SwingWorker<String, String> {
         var sentences = SentenceSplitter.splitby(inputText, '.');
         for (int j = 0; j < sentences.length; j++) {
             for (var word : SentenceSplitter.splitby(sentences[j], ' ')) {
+                if (isCancelled()) return;
+                while (paused) {
+                    if (isCancelled()) return;
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+
                 var parsed = wordParser.parse(word);
                 publish(word);
-                engine.playSequence(engine.toPhonemePaths(parsed),
-                        this::isCancelled,
-                        () -> paused);
+                var phonemePaths = engine.toPhonemePaths(parsed);
+
+                if (engine.isMergeBeforePlayEnabled()) {
+                    var merged = engine.mergeSequence(phonemePaths, this::isCancelled, () -> paused);
+                    engine.playMerged(merged, this::isCancelled, () -> paused);
+                } else {
+                    engine.playSequence(phonemePaths, this::isCancelled, () -> paused);
+                }
             }
             if (j < sentences.length - 1) {
                 Thread.sleep(engine.sentencePauseMs());

@@ -22,6 +22,7 @@ import java.util.prefs.Preferences;
 public class MainFrameFX implements tts.domain.FrameInterface {
 
     private static final String PREF_AUDIO_PROFILE = "audio.profile";
+    private static final String PREF_MERGE_BEFORE_PLAY = "merge.before.play";
     private final Preferences prefs = Preferences.userNodeForPackage(MainFrameFX.class);
     
     private Stage stage;
@@ -30,6 +31,7 @@ public class MainFrameFX implements tts.domain.FrameInterface {
     private Button stopBtn;
     private Button pauseBtn;
     private ComboBox<String> profileCombo;
+    private CheckBox mergeCheckbox;
     private Label profileStatusLabel;
     private Label statusLabel;
     private ProgressBar playbackProgress;
@@ -108,8 +110,12 @@ public class MainFrameFX implements tts.domain.FrameInterface {
         
         profileStatusLabel = new Label("Profile: balanced");
         profileStatusLabel.setStyle("-fx-text-fill: #666666; -fx-font-size: 10;");
+
+        mergeCheckbox = new CheckBox("Merge");
+        mergeCheckbox.setTooltip(new Tooltip("Merge phonemes before playback (slower start, smoother audio)"));
+        mergeCheckbox.setOnAction(e -> onMergeModeChanged());
         
-        profileSection.getChildren().addAll(audioLabel, profileCombo, profileStatusLabel);
+        profileSection.getChildren().addAll(audioLabel, profileCombo, profileStatusLabel, mergeCheckbox);
         
         // Logo - increased size for better visibility
         HBox logoBox = new HBox();
@@ -315,6 +321,12 @@ public class MainFrameFX implements tts.domain.FrameInterface {
         }
     }
 
+    private void onMergeModeChanged() {
+        boolean enabled = mergeCheckbox.isSelected();
+        player.setMergeBeforePlay(enabled);
+        prefs.putBoolean(PREF_MERGE_BEFORE_PLAY, enabled);
+    }
+
     private void updateButtonStates(boolean playEnabled, boolean stopEnabled, boolean pauseEnabled) {
         Platform.runLater(() -> {
             playBtn.setDisable(!playEnabled);
@@ -334,6 +346,10 @@ public class MainFrameFX implements tts.domain.FrameInterface {
         player.setProfile(profile);
         profileCombo.setValue(profile.name().toLowerCase());
         updateProfileStatusLabel();
+
+        boolean mergeEnabled = prefs.getBoolean(PREF_MERGE_BEFORE_PLAY, false);
+        mergeCheckbox.setSelected(mergeEnabled);
+        player.setMergeBeforePlay(mergeEnabled);
     }
 
     @Override

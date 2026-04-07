@@ -55,9 +55,19 @@ public class PlayerFX extends Task<String> {
                 
                 var parsed = wordParser.parse(word);
                 updateMessage(word);
-                engine.playSequence(engine.toPhonemePaths(parsed),
+                var phonemePaths = engine.toPhonemePaths(parsed);
+                if (engine.isMergeBeforePlayEnabled()) {
+                    var merged = engine.mergeSequence(phonemePaths,
                         this::isCancelled,
                         () -> paused);
+                    engine.playMerged(merged,
+                        this::isCancelled,
+                        () -> paused);
+                } else {
+                    engine.playSequence(phonemePaths,
+                        this::isCancelled,
+                        () -> paused);
+                }
             }
             if (j < sentences.length - 1) {
                 Thread.sleep(engine.sentencePauseMs());

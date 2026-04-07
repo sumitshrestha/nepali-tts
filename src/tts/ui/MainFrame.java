@@ -41,6 +41,7 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
         audioProfileLabel = new javax.swing.JLabel();
         profileCombo = new javax.swing.JComboBox<>();
         profileStatusLabel = new javax.swing.JLabel();
+        mergeCheckbox = new javax.swing.JCheckBox();
         centralPanel = new javax.swing.JPanel();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel2 = new javax.swing.JPanel();
@@ -104,6 +105,14 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
         profileStatusLabel.setText("Profile: balanced");
         updateProfileStatusLabel();
 
+        mergeCheckbox.setText("Merge");
+        mergeCheckbox.setToolTipText("Merge phonemes before playback (slower start, smoother audio)");
+        mergeCheckbox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mergeCheckboxActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -121,7 +130,9 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
                 .addComponent(profileCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(profileStatusLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 119, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(mergeCheckbox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 60, Short.MAX_VALUE)
                 .addComponent(jLabel3))
         );
         jPanel1Layout.setVerticalGroup(
@@ -137,7 +148,8 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(audioProfileLabel)
                         .addComponent(profileCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(profileStatusLabel))))
+                        .addComponent(profileStatusLabel)
+                        .addComponent(mergeCheckbox))))
         );
 
         getContentPane().add(jPanel1, java.awt.BorderLayout.SOUTH);
@@ -208,12 +220,22 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
         }
     }//GEN-LAST:event_profileComboActionPerformed
 
+    private void mergeCheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mergeCheckboxActionPerformed
+        boolean mergeEnabled = this.mergeCheckbox.isSelected();
+        this.Player.setMergeBeforePlay(mergeEnabled);
+        this.prefs.putBoolean(PREF_MERGE_BEFORE_PLAY, mergeEnabled);
+    }//GEN-LAST:event_mergeCheckboxActionPerformed
+
     private void loadSavedAudioProfile() {
         var saved = this.prefs.get(PREF_AUDIO_PROFILE, this.Player.getProfile().name().toLowerCase());
         var profile = tts.domain.TTSEngine.AudioProfile.from(saved);
         this.Player.setProfile(profile);
         this.profileCombo.setSelectedItem(profile.name().toLowerCase());
         updateProfileStatusLabel();
+
+        boolean mergeEnabled = this.prefs.getBoolean(PREF_MERGE_BEFORE_PLAY, false);
+        this.mergeCheckbox.setSelected(mergeEnabled);
+        this.Player.setMergeBeforePlay(mergeEnabled);
     }
 
     private void updateProfileStatusLabel() {
@@ -249,12 +271,15 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JCheckBox mergeCheckbox;
     private javax.swing.JButton pauseBtn;
     private javax.swing.JComboBox<String> profileCombo;
     private javax.swing.JLabel profileStatusLabel;
     // End of variables declaration//GEN-END:variables
     private static final String PREF_AUDIO_PROFILE = "audio.profile";
+    private static final String PREF_MERGE_BEFORE_PLAY = "merge.before.play";
     private final Preferences prefs = Preferences.userNodeForPackage(MainFrame.class);
     private tts.domain.TTSEngine Player = new tts.domain.TTSEngine();
     private tts.domain.Player presentPlayerWorker;
 }
+
