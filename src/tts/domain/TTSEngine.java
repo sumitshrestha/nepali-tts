@@ -1,77 +1,52 @@
-//                                          !! RAM !!
 package tts.domain;
 
+import java.util.ArrayList;
 import javax.sound.sampled.*;
 
-/**
- *
- * @author Sumit Shrestha
- */
-public class TTSEngine implements LineListener {
+public class TTSEngine {
 
-    private URL FileAddress;
-    private final String DbName = "soundDb";
+    private static final String DB_NAME = "soundDb";
 
-    // sets the address from which to get the sound files
-    public void setFileAddress(URL add) {
-        FileAddress = add;
-    }
-
-    public String[] returnwordarray(String word) {
-        String[] a = new String[word.length()];
-        char[] wordchar = word.toCharArray();
-        int j = 0;
-        for (int i = 0; i < wordchar.length; i++) {
-            if (!Character.isDigit(wordchar[i])) {
-                a[j] = String.valueOf(wordchar[i]);
+    /**
+     * Converts a parsed phoneme string into an array of WAV file paths.
+     * Digit suffixes (e.g. "a1") are appended to the preceding phoneme token.
+     */
+    public String[] toPhonemePaths(String word) {
+        var parts = new ArrayList<String>();
+        for (char c : word.toCharArray()) {
+            if (!Character.isDigit(c)) {
+                parts.add(String.valueOf(c));
             } else {
-                if (j == 0) {
-                    System.out.println(" wrong input :: input has illegal character at the begginnig ");
-                    return null;
-                } else {
-                    a[--j] += wordchar[i];
+                if (parts.isEmpty()) {
+                    throw new IllegalArgumentException("Word starts with a digit: " + word);
                 }
+                parts.set(parts.size() - 1, parts.getLast() + c);
             }
-            j++;
         }
-        String[] h = new String[j];
-
-        // add needed words
-        for (int i = 0; i < j; i++) {
-            h[i] = a[i] + ".wav";
-        }
-
-        return h;
-    }
-
-    public void update(LineEvent e) {
-        System.out.println(" update started ");
+        return parts.stream()
+                    .map(p -> p + ".wav")
+                    .toArray(String[]::new);
     }
 
     public void play(String file) throws Exception {
-        AudioInputStream stream = AudioSystem.getAudioInputStream(
-                getClass().getResource("/" + this.DbName + "/" + file));
-        AudioFormat format = stream.getFormat();
-        SourceDataLine.Info info = new DataLine.Info(SourceDataLine.class, format,
-                ((int) stream.getFrameLength() * format.getFrameSize()));
-        SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
-        line.open(format);
-        try {
-            line.start();
-            int numRead;
-            byte[] buf = new byte[line.getBufferSize()];
-            while ((numRead = stream.read(buf, 0, buf.length)) >= 0) {
-                int offset = 0;
-                while (offset < numRead) {
-                    offset += line.write(buf, offset, numRead - offset);
+        try (var stream = AudioSystem.getAudioInputStream(
+                getClass().getResource("/" + DB_NAME + "/" + file))) {
+            var format = stream.getFormat();
+            var info = new DataLine.Info(SourceDataLine.class, format,
+                    (int) (stream.getFrameLength() * format.getFrameSize()));
+            try (var line = (SourceDataLine) AudioSystem.getLine(info)) {
+                line.open(format);
+                line.start();
+                var buf = new byte[line.getBufferSize()];
+                int numRead;
+                while ((numRead = stream.read(buf, 0, buf.length)) >= 0) {
+                    int offset = 0;
+                    while (offset < numRead) {
+                        offset += line.write(buf, offset, numRead - offset);
+                    }
                 }
+                line.drain();
             }
-            line.drain();
-        } finally {
-            line.stop();
-            line.close();
-            stream.close();
         }
     }
-
 }

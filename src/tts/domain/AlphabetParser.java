@@ -1,64 +1,48 @@
-
-//                                          !! RAM !!
-
 package tts.domain;
 
-import java.util.Deque;
+import java.util.LinkedList;
 
 /**
- * This class parses the single word n gives the original word as output.
- * Nepali like other informal language is very ambiguous.
- * So, user will normally input ambigous words.
- * The job of this class is to analyse the input words n remove its ambiguity which can be known by the TTS Engine.
- *
- * @author Sumit Shrestha
+ * Parses a single romanized Nepali word and resolves phonetic ambiguities
+ * so the TTS engine can map tokens to audio files unambiguously.
  */
 public class AlphabetParser {
-    
-    public String parse( String Token ){
-        Token = Token.toLowerCase();
-        java.util.LinkedList<String> tempStack = new java.util.LinkedList<String>();
-        char[] array = Token.toCharArray();
-        for( int i=0; i<array.length; i++ ){
-            if( tempStack.isEmpty() )
-                tempStack.push( String.valueOf(array[i]) );
-            else{
-                String last = tempStack.getFirst();
-                if( this.Vowels.contains(last) && last.equals( String.valueOf( array[i] )) ){// last is vowel and last is equal to current character i.e. aa or ee or oo
-                    change( last, tempStack );                           
-                }
-                else
-                    if( this.Consonants.contains(last) && array[i] == 'h' ){// previous char was consonant and present character(next) is 'h' i.e. gh, kh, etc
-                        change( last, tempStack );                           
-                    }
-                    else
-                        if( last.equals("a") && array[i] == 'u' ){
-                            tempStack.pop();
-                            tempStack.push("o");
-                        }
-                        else
-                            if( last.equals("a") && array[i] == 'i' ){
-                                tempStack.pop();
-                                tempStack.push("e");
-                            }
-                            else{
-                                tempStack.push( String.valueOf( array[i] ) );
-                            }
+
+    public String parse(String token) {
+        var stack = new LinkedList<String>();
+        for (char c : token.toLowerCase().toCharArray()) {
+            if (stack.isEmpty()) {
+                stack.push(String.valueOf(c));
+                continue;
+            }
+            var top = stack.getFirst();
+            if (VOWELS.contains(top) && top.equals(String.valueOf(c))) {
+                // doubled vowel: aa→a1, ee→e1, oo→o1
+                stack.pop();
+                stack.push(top + "1");
+            } else if (CONSONANTS.contains(top) && c == 'h') {
+                // aspirated consonant: kh→k1, gh→g1, bh→b1, etc.
+                stack.pop();
+                stack.push(top + "1");
+            } else if (top.equals("a") && c == 'u') {
+                // diphthong au → o
+                stack.pop();
+                stack.push("o");
+            } else if (top.equals("a") && c == 'i') {
+                // diphthong ai → e
+                stack.pop();
+                stack.push("e");
+            } else {
+                stack.push(String.valueOf(c));
             }
         }
-        String result = "";        
-        while( !tempStack.isEmpty() ){
-            result += tempStack.pollLast();
-        }        
-        return result;
+        var result = new StringBuilder();
+        while (!stack.isEmpty()) {
+            result.append(stack.pollLast());
+        }
+        return result.toString();
     }
-    
-    private void change(String last, Deque<String> tempStack) {
-        // last is vowel and last is equal to current character i.e. aa or ee or oo
-        tempStack.pop();
-        tempStack.push(last + "1");
-    }
-    
-    private final String Vowels = "aeiou";
-    private final String Consonants = "kgcjtdpbs";
+
+    private static final String VOWELS = "aeiou";
+    private static final String CONSONANTS = "kgcjtdpbs";
 }
