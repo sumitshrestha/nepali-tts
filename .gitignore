@@ -1,6 +1,7 @@
 # Build output
 build/
 dist/
+.gradle/
 
 # NetBeans private settings (user-specific)
 nbproject/private/
@@ -14,6 +15,7 @@ nbproject/Package-*.bash
 
 # JAR files
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 
 # Log files
 *.log
