@@ -1,10 +1,7 @@
 //                                          !! RAM !!
 package tts.domain;
 
-import java.util.*;
 import javax.sound.sampled.*;
-import java.net.*;
-import java.io.*;
 
 /**
  *
@@ -52,32 +49,29 @@ public class TTSEngine implements LineListener {
     }
 
     public void play(String file) throws Exception {
-        File f = new File("/" + this.DbName + "/" + file);
-        if(f.exists())
-            System.out.println("file exists "+f.getName());
-        else 
-            System.out.println("file does not exists");
-        AudioInputStream Stream = AudioSystem.getAudioInputStream(f);
-//        AudioInputStream Stream = AudioSystem.getAudioInputStream(getClass().getResource("/" + this.DbName + "/" + file));
-        AudioFormat Format = Stream.getFormat();
-        SourceDataLine.Info info = new DataLine.Info(SourceDataLine.class, Stream.getFormat(), ((int) Stream.getFrameLength() * Format.getFrameSize()));
+        AudioInputStream stream = AudioSystem.getAudioInputStream(
+                getClass().getResource("/" + this.DbName + "/" + file));
+        AudioFormat format = stream.getFormat();
+        SourceDataLine.Info info = new DataLine.Info(SourceDataLine.class, format,
+                ((int) stream.getFrameLength() * format.getFrameSize()));
         SourceDataLine line = (SourceDataLine) AudioSystem.getLine(info);
-
-        line.open(Stream.getFormat());
-        //line.addLineListener( this );
-        line.start();
-        int numRead = 0;
-        byte[] buf = new byte[line.getBufferSize()];
-        while ((numRead = Stream.read(buf, 0, buf.length)) >= 0) {
-            int offset = 0;
-            while (offset < numRead) {
-                offset += line.write(buf, offset, numRead - offset);
+        line.open(format);
+        try {
+            line.start();
+            int numRead;
+            byte[] buf = new byte[line.getBufferSize()];
+            while ((numRead = stream.read(buf, 0, buf.length)) >= 0) {
+                int offset = 0;
+                while (offset < numRead) {
+                    offset += line.write(buf, offset, numRead - offset);
+                }
             }
-
+            line.drain();
+        } finally {
+            line.stop();
+            line.close();
+            stream.close();
         }
-        line.drain();
-        line.stop();
-        //Thread.sleep(30);       
     }
 
 }

@@ -32,12 +32,14 @@ public class AlphabetParser {
                         change( last, tempStack );                           
                     }
                     else
-                        if( array[i-1]=='a' && array[i] == 'u' ){
-                            change( "o", tempStack );
+                        if( last.equals("a") && array[i] == 'u' ){
+                            tempStack.pop();
+                            tempStack.push("o");
                         }
                         else
-                            if( array[i-1] == 'a' && array[i] == 'i' ){
-                                change("e", tempStack );
+                            if( last.equals("a") && array[i] == 'i' ){
+                                tempStack.pop();
+                                tempStack.push("e");
                             }
                             else{
                                 tempStack.push( String.valueOf( array[i] ) );

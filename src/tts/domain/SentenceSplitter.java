@@ -15,6 +15,9 @@ import java.util.*;
        // function: splitby starts
        final static String[] splitby( String test, char s /* splitting character*/ )
        {
+       if( test == null || test.isEmpty() ){
+           return new String[0];
+       }
        
        //here it actually removes the surrounding splitting character 
        // 

@@ -27,7 +27,10 @@ public class Player extends javax.swing.SwingWorker<String,String>{
              String[] wordstring = Player .returnwordarray( SpokenWord );
              for( int r=0; r<wordstring.length; r++ ){
                  if( super.isCancelled() ) return;
-                 while( this.pause ){if( super.isCancelled() ) return;}
+                 while( this.pause ){
+                     if( super.isCancelled() ) return;
+                     try { Thread.sleep(10); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); return; }
+                 }
                     playFile( wordstring[r] );
              }             
          }
@@ -40,7 +43,6 @@ public class Player extends javax.swing.SwingWorker<String,String>{
    @Override
    public String doInBackground(){
        try{
-           this.play();
            this.playstring( Text.getText() );
            return this.DONE;
        }
@@ -55,7 +57,7 @@ public class Player extends javax.swing.SwingWorker<String,String>{
        try{
            String state = this.get();
            this.Listener.onPlayCompletion( state );
-           if( state == this.DONE ){
+           if( this.DONE.equals(state) ){
                javax.swing.JOptionPane.showMessageDialog( null, "Text played Successfully","Played", javax.swing.JOptionPane.INFORMATION_MESSAGE );
            }
            else{
