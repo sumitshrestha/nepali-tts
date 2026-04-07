@@ -46,6 +46,27 @@ ant jar
 java -jar dist/TTS.jar
 ```
 
+## Audio Quality Profiles
+
+The engine supports three built-in join-smoothing profiles:
+
+- `crisp` - shortest fades/crossfades, sharper articulation
+- `balanced` - default, good overall smoothness and clarity
+- `smooth` - longer fades/crossfades for softer transitions
+
+Select profile at runtime using JVM property `tts.audio.profile`:
+
+```bash
+java -Dtts.audio.profile=balanced -jar build/libs/TTS-executable.jar
+```
+
+You can also change the profile from the UI while the app is running using the `Audio` dropdown.
+Profiles also adjust sentence pause timing:
+
+- `crisp` - shorter sentence breaks
+- `balanced` - medium sentence breaks
+- `smooth` - longer sentence breaks
+
 ## Author
 
 Sumit Shrestha

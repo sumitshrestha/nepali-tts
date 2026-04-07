@@ -7,6 +7,8 @@
  */
 package tts.ui;
 
+import java.util.prefs.Preferences;
+
 /**
  *
  * @author Sumit Shrestha
@@ -18,6 +20,7 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
      */
     public MainFrame() {
         initComponents();
+        this.loadSavedAudioProfile();
         this.setFrameIcon();
         super.setLocationRelativeTo(null);
     }
@@ -35,6 +38,9 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
         StopBtn = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
         pauseBtn = new javax.swing.JButton();
+        audioProfileLabel = new javax.swing.JLabel();
+        profileCombo = new javax.swing.JComboBox<>();
+        profileStatusLabel = new javax.swing.JLabel();
         centralPanel = new javax.swing.JPanel();
         jSplitPane1 = new javax.swing.JSplitPane();
         jPanel2 = new javax.swing.JPanel();
@@ -84,6 +90,20 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
             }
         });
 
+        audioProfileLabel.setText("Audio:");
+
+        profileCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "crisp", "balanced", "smooth" }));
+        profileCombo.setSelectedItem(Player.getProfile().name().toLowerCase());
+        profileCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                profileComboActionPerformed(evt);
+            }
+        });
+
+        profileStatusLabel.setFont(new java.awt.Font("Tahoma", 2, 11)); // NOI18N
+        profileStatusLabel.setText("Profile: balanced");
+        updateProfileStatusLabel();
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -95,16 +115,29 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
                 .addComponent(StopBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(pauseBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 224, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(audioProfileLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(profileCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(profileStatusLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 119, Short.MAX_VALUE)
                 .addComponent(jLabel3))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel3)
-            .addComponent(PlayBtn)
-            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                .addComponent(pauseBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(StopBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(jLabel3)
+                .addComponent(PlayBtn)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(pauseBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(StopBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGap(17, 17, 17)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(audioProfileLabel)
+                        .addComponent(profileCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(profileStatusLabel))))
         );
 
         getContentPane().add(jPanel1, java.awt.BorderLayout.SOUTH);
@@ -165,6 +198,29 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
         }
 }//GEN-LAST:event_pauseBtnActionPerformed
 
+    private void profileComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_profileComboActionPerformed
+        Object selected = this.profileCombo.getSelectedItem();
+        if (selected instanceof String s) {
+            var profile = tts.domain.TTSEngine.AudioProfile.from(s);
+            this.Player.setProfile(profile);
+            this.prefs.put(PREF_AUDIO_PROFILE, profile.name().toLowerCase());
+            updateProfileStatusLabel();
+        }
+    }//GEN-LAST:event_profileComboActionPerformed
+
+    private void loadSavedAudioProfile() {
+        var saved = this.prefs.get(PREF_AUDIO_PROFILE, this.Player.getProfile().name().toLowerCase());
+        var profile = tts.domain.TTSEngine.AudioProfile.from(saved);
+        this.Player.setProfile(profile);
+        this.profileCombo.setSelectedItem(profile.name().toLowerCase());
+        updateProfileStatusLabel();
+    }
+
+    private void updateProfileStatusLabel() {
+        var currentProfile = this.Player.getProfile().name().toLowerCase();
+        this.profileStatusLabel.setText("Profile: " + currentProfile);
+    }
+
     private void setFrameIcon() {
         java.awt.Image im = java.awt.Toolkit.getDefaultToolkit().getImage(getClass().getResource("/tts/ui/img/nepal.png"));
         this.setIconImage(im);
@@ -184,6 +240,7 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
     private javax.swing.JTextPane InputText;
     private javax.swing.JButton PlayBtn;
     private javax.swing.JButton StopBtn;
+    private javax.swing.JLabel audioProfileLabel;
     private javax.swing.JPanel centralPanel;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -193,7 +250,11 @@ public class MainFrame extends javax.swing.JFrame implements tts.domain.FrameInt
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JButton pauseBtn;
+    private javax.swing.JComboBox<String> profileCombo;
+    private javax.swing.JLabel profileStatusLabel;
     // End of variables declaration//GEN-END:variables
+    private static final String PREF_AUDIO_PROFILE = "audio.profile";
+    private final Preferences prefs = Preferences.userNodeForPackage(MainFrame.class);
     private tts.domain.TTSEngine Player = new tts.domain.TTSEngine();
     private tts.domain.Player presentPlayerWorker;
 }

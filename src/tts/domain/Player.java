@@ -21,22 +21,12 @@ public class Player extends SwingWorker<String, String> {
             for (var word : SentenceSplitter.splitby(sentences[j], ' ')) {
                 var parsed = wordParser.parse(word);
                 publish(word);
-                for (var phonemeFile : engine.toPhonemePaths(parsed)) {
-                    if (isCancelled()) return;
-                    while (paused) {
-                        if (isCancelled()) return;
-                        try {
-                            Thread.sleep(10);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            return;
-                        }
-                    }
-                    engine.play(phonemeFile);
-                }
+                engine.playSequence(engine.toPhonemePaths(parsed),
+                        this::isCancelled,
+                        () -> paused);
             }
             if (j < sentences.length - 1) {
-                Thread.sleep(500);
+                Thread.sleep(engine.sentencePauseMs());
             }
         }
     }
