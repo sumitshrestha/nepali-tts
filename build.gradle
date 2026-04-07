@@ -1,10 +1,16 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 repositories {
     mavenCentral()
+}
+
+javafx {
+    version = '21'
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.graphics']
 }
 
 sourceSets {
@@ -29,7 +35,14 @@ sourceSets {
 }
 
 application {
-    mainClass = 'tts.Main'
+    // Use JavaFX UI by default. Switch to 'tts.Main' for legacy Swing UI
+    mainClass = 'tts.MainFX'
+}
+
+dependencies {
+    implementation 'org.openjfx:javafx-controls:21'
+    implementation 'org.openjfx:javafx-fxml:21'
+    implementation 'org.openjfx:javafx-graphics:21'
 }
 
 tasks.withType(JavaCompile).configureEach {
